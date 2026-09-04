@@ -62,6 +62,7 @@ function buildTeamReports(snapshots: RosterSnapshot[], movements: Movement[], ma
       if (!reports.has(team)) {
         reports.set(team, {
           team,
+          operations: 0,
           changes: 0,
           foreignTransfers: 0,
           trades: 0,
@@ -78,8 +79,10 @@ function buildTeamReports(snapshots: RosterSnapshot[], movements: Movement[], ma
     if (!report) continue;
     report.movements.push(move);
     if (move.countsAsChange) report.changes += 1;
-    if (move.direction === 'OUT' && move.type === 'ESTERO') report.foreignTransfers += 1;
-    if (move.direction === 'OUT' && move.type === 'SCAMBIO') report.trades += 1;
+    if (move.direction !== 'OUT') continue;
+    report.operations += 1;
+    if (move.type === 'ESTERO') report.foreignTransfers += 1;
+    if (move.type === 'SCAMBIO') report.trades += 1;
   }
 
   for (const report of reports.values()) {

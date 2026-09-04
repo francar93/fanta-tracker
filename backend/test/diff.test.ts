@@ -132,6 +132,22 @@ test('una finestra scambi in mezzo alla cascata non erode il budget', () => {
   );
 });
 
+test('operazioni = cambi + estero + scambi, e i rimanenti non riaccreditano gli esenti', () => {
+  // Alpha: 3 uscite di cui una estero -> 2 cambi conteggiati, 3 operazioni, 10 rimanenti.
+  const v1 = snapshot(1, team('Alpha', 'Rossi', 'Bianchi', 'Verdi *', 'Neri'));
+  const v2 = snapshot(2, team('Alpha', 'Neri', 'Gialli', 'Blu', 'Viola'));
+
+  const alpha = analyzeSeason([v1, v2]).teams.find((t) => t.team === 'Alpha')!;
+
+  assert.equal(alpha.operations, 3);
+  assert.equal(alpha.changes, 2);
+  assert.equal(alpha.foreignTransfers, 1);
+  assert.equal(alpha.trades, 0);
+  assert.equal(alpha.operations, alpha.changes + alpha.foreignTransfers + alpha.trades);
+  // 12 - 2 = 10, NON 12 - 2 + 1: l'esente è già escluso dal conteggio.
+  assert.equal(alpha.remainingChanges, 10);
+});
+
 test('il limite stagionale è configurabile e segnala lo sforamento', () => {
   const v1 = snapshot(1, team('Alpha', 'Rossi'));
   const v2 = snapshot(2, team('Alpha', 'Bianchi'));

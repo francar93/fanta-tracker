@@ -75,8 +75,17 @@ test('analisi end-to-end sui due file reali', async () => {
 
   for (const team of report.teams) {
     assert.ok(team.changes >= 0);
+    assert.equal(team.operations, team.changes + team.foreignTransfers + team.trades);
     assert.equal(team.remainingChanges, Math.max(0, 12 - team.changes));
   }
+
+  // Riferimento verificato a mano sul file grezzo: 5 uscite, di cui "Romagnoli *" verso l'estero.
+  const atletico = report.teams.find((t) => t.team === 'Atletico ma non troppo');
+  assert.equal(atletico?.operations, 5);
+  assert.equal(atletico?.changes, 4);
+  assert.equal(atletico?.foreignTransfers, 1);
+  assert.equal(atletico?.remainingChanges, 8);
+  assert.equal(atletico?.movements.find((m) => m.player === 'Romagnoli')?.type, 'ESTERO');
 
   // Entrambi i file sono finestre di mercato: nessuno scambio va dedotto automaticamente.
   const movements = report.teams.flatMap((t) => t.movements);
@@ -86,5 +95,5 @@ test('analisi end-to-end sui due file reali', async () => {
   assert.ok(report.tradeCandidates.length > 0);
   assert.ok(report.tradeCandidates.every((c) => c.from !== c.to && c.version === 2));
 
-  assert.match(renderSummaryTable(report), /\| Squadra \| Cambi Totali \(Max 12\) \|/);
+  assert.match(renderSummaryTable(report), /\| Squadra \| Operazioni \| Cambi Conteggiati \(Max 12\) \|/);
 });

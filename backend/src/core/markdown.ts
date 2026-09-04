@@ -5,15 +5,23 @@
 
 import type { Movement, SeasonReport, TradeCandidate } from './types.js';
 
-/** Summary table, one row per team — the output of the "Copia per Notion" button. */
+/**
+ * Summary table, one row per team — the output of the "Copia per Notion" button.
+ *
+ * `Cambi Conteggiati` is already net of the exempt movements: `Cambi Rimanenti` is simply
+ * `maxChanges - conteggiati`. The exempt columns must NOT be added back, or the exemption would
+ * be granted twice. `Operazioni` is the gross figure, for context.
+ */
 export function renderSummaryTable(report: SeasonReport): string {
   const lines = [
-    `| Squadra | Cambi Totali (Max ${report.maxChanges}) | Trasferimenti Estero (*) | Cambi Rimanenti |`,
-    '| :--- | :---: | :---: | :---: |',
+    `| Squadra | Operazioni | Cambi Conteggiati (Max ${report.maxChanges}) | Trasferimenti Estero (*) | Scambi | Cambi Rimanenti |`,
+    '| :--- | :---: | :---: | :---: | :---: | :---: |',
   ];
 
   for (const team of report.teams) {
-    lines.push(`| ${escapePipes(team.team)} | ${team.changes} | ${team.foreignTransfers} | ${team.remainingChanges} |`);
+    lines.push(
+      `| ${escapePipes(team.team)} | ${team.operations} | ${team.changes} | ${team.foreignTransfers} | ${team.trades} | ${team.remainingChanges} |`,
+    );
   }
 
   return lines.join('\n');

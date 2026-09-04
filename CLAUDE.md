@@ -118,8 +118,23 @@ movimenti (`SCAMBIO` se hanno una controparte, altrimenti `SVINCOLO`) ma non inc
 contatore — così una squadra che rilascia due giocatori e ne pesca due dagli svincolati consuma 2
 cambi, non 4. Il flag `countsAsChange` su ogni `Movement` è l'unica fonte di verità del conteggio.
 
-Output per squadra: cambi totali, trasferimenti estero, cambi rimanenti (`limite - cambi`), più il
-dettaglio movimento per movimento (giocatore, costo, tipologia).
+### Semantica delle colonne del report
+
+| Campo | Significato |
+| :--- | :--- |
+| `operations` | tutte le uscite della stagione, esenti incluse |
+| `changes` | solo le uscite che erodono il budget (**già al netto** degli esenti) |
+| `foreignTransfers` | uscite esenti per asterisco |
+| `trades` | uscite esenti perché scambi dichiarati |
+| `remainingChanges` | `max(0, maxChanges - changes)` |
+
+Invariante testata: `operations === changes + foreignTransfers + trades`.
+
+**Attenzione all'equivoco**: `remainingChanges` è `limite - changes`, **non** `limite - changes +
+foreignTransfers`. Gli esenti sono già esclusi da `changes`; risommarli concederebbe due volte
+l'esenzione. L'esempio §4 del documento di analisi (`4 | 1 | 9`) usa invece la colonna in senso
+*lordo*, ed è la fonte dell'ambiguità: nel report la colonna si chiama per questo "Cambi
+Conteggiati", con "Operazioni" a fianco per il dato lordo.
 
 ## Output
 
@@ -127,8 +142,8 @@ dettaglio movimento per movimento (giocatore, costo, tipologia).
 - **Markdown "Notion ready"**: tabella copiabile in clipboard, formato:
 
   ```
-  | Squadra | Cambi Totali (Max 12) | Trasferimenti Estero (*) | Cambi Rimanenti |
-  | :--- | :---: | :---: | :---: |
+  | Squadra | Operazioni | Cambi Conteggiati (Max 12) | Trasferimenti Estero (*) | Scambi | Cambi Rimanenti |
+  | :--- | :---: | :---: | :---: | :---: | :---: |
   ```
 
 ## Convenzioni

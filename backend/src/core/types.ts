@@ -91,7 +91,12 @@ export interface Movement {
 /** Aggregated season totals for one team. */
 export interface TeamReport {
   team: string;
-  /** Number of movements that consumed the seasonal budget. */
+  /**
+   * Every outgoing movement of the season, exempt ones included:
+   * `operations === changes + foreignTransfers + trades`.
+   */
+  operations: number;
+  /** Outgoing movements that consumed the seasonal budget (exempt ones already excluded). */
   changes: number;
   /** Exempt movements towards foreign leagues. */
   foreignTransfers: number;
