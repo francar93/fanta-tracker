@@ -8,3 +8,5 @@ db.json
 
 # Excel lock files
 ~$*.xlsx
+
+backend/node_modules/

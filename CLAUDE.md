@@ -13,11 +13,12 @@ squadra rispetto a un limite stagionale (default 12, configurabile), escludendo 
 ## Stato del progetto
 
 **Fatto**: monorepo npm workspaces, core engine completo in TypeScript (parser xlsx, diff di lega,
-finestre mercato/scambi, cascata, render Markdown), CLI, 18 test verdi tra regole di business ed
-end-to-end sui file reali.
+finestre mercato/scambi, cascata, render Markdown), CLI, API REST Express 5 con persistenza lowdb,
+Swagger UI su `/api/docs`, 39 test verdi tra regole di business, end-to-end sui file reali, API su
+server in ascolto e coerenza della spec OpenAPI.
 
-**Da fare**: API REST + persistenza lowdb, frontend Angular (incluso il quesito "scambi o mercato?"
-in fase di upload), Docker/NGINX, recupero crediti per le cessioni all'estero (fase 2 dell'analisi).
+**Da fare**: frontend Angular (incluso il quesito "scambi o mercato?" in fase di upload),
+Docker/NGINX, recupero crediti per le cessioni all'estero (fase 2 dell'analisi).
 
 ## Comandi
 
@@ -27,7 +28,36 @@ npm test                                     # test suite (node:test via tsx)
 npm run typecheck                            # tsc --noEmit
 npm run analyze -- assets/input              # report Markdown sui file di esempio
 npm run analyze -- assets/input --max 15 --json
+npm run dev                                  # API in watch su http://localhost:3000
 ```
+
+Variabili d'ambiente: `PORT` (default 3000), `FANTA_DB` (default `backend/db.json`).
+
+## API REST
+
+| Metodo | Rotta | Note |
+| :--- | :--- | :--- |
+| GET | `/api/health` | |
+| GET/PUT | `/api/settings` | `{ maxChanges }` |
+| GET | `/api/snapshots` | elenco senza le rose (solo metadati + `teamCount`) |
+| POST | `/api/snapshots` | multipart, campo `file`; opzionali `source`, `kind`, `version`; `?overwrite=true` |
+| PATCH | `/api/snapshots/:id` | `{ kind }` — è il quesito "scambi o mercato?" della UI |
+| DELETE | `/api/snapshots/:id` | |
+| GET | `/api/report` | JSON; `?max=N` sovrascrive il limite solo per la risposta |
+| GET | `/api/report/markdown` | `text/markdown`; `?summaryOnly=true` per la sola tabella Notion |
+| GET | `/api/openapi.json` | documento OpenAPI 3.1 |
+| GET | `/api/docs` | Swagger UI |
+
+La spec in `src/api/openapi.ts` è **scritta a mano**, non generata. Va aggiornata nella stessa
+modifica che aggiunge o rinomina una rotta: `test/openapi.test.ts` percorre il router Express e
+fallisce se una rotta non è descritta (o se è descritta una rotta inesistente).
+
+Convenzioni di errore: input non valido → 400 (incluso un `.xlsx` illeggibile, che exceljs segnala
+con `Error` generici da tradurre, mai lasciar diventare 500); versione già presente → 409; meno di
+due snapshot per il report → 409.
+
+Gli snapshot vengono persistiti **già parsati**, non come blob `.xlsx`: il report si ricostruisce a
+ogni richiesta e `db.json` resta ispezionabile a mano.
 
 ## Architettura (monorepo npm workspaces)
 
@@ -41,8 +71,14 @@ backend/           Node.js 20 + TypeScript (ESM)
     engine.ts      cascata su tutti gli snapshot -> SeasonReport
     markdown.ts    render tabelle "Notion ready"
     index.ts       superficie pubblica del core
+  src/api/         livello HTTP — Express 5 + multer (upload in memoria) + lowdb
+    db.ts          schema di db.json, apertura, conversione verso il core
+    server.ts      createServer(db) -> app Express, rotte e mappatura degli errori
+    openapi.ts     documento OpenAPI 3.1 scritto a mano (servito su /api/docs)
+    main.ts        entry point che mette in ascolto
   src/cli/         entry point da terminale
-  test/            helpers.ts costruisce snapshot in memoria senza passare da Excel
+  test/            helpers.ts costruisce snapshot in memoria senza passare da Excel;
+                   api.test.ts avvia un server vero su porta 0 con un db temporaneo
 frontend/          Angular — DA FARE
 docker/            Dockerfile(s), nginx.conf — DA FARE
 assets/input/      export .xlsx reali, usati anche come fixture di test

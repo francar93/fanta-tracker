@@ -10,7 +10,9 @@
     "analyze": "npm run analyze --workspace backend --",
     "test": "npm run test --workspace backend",
     "typecheck": "npm run typecheck --workspace backend",
-    "build": "npm run build --workspace backend"
+    "build": "npm run build --workspace backend",
+    "dev": "npm run dev --workspace backend",
+    "start": "npm start --workspace backend"
   },
   "engines": {
     "node": ">=20"
