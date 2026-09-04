@@ -1,0 +1,24 @@
+{
+  "name": "@fanta-tracker/backend",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "FantaTracker core engine and API",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "analyze": "tsx src/cli/analyze.ts",
+    "test": "tsx --test test/*.test.ts",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "exceljs": "^4.4.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "tsx": "^4.19.2",
+    "typescript": "^5.6.3"
+  }
+}
